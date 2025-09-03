@@ -1,5 +1,9 @@
 
-import pandas as pd, unicodedata, re, streamlit as st, plotly.express as px
+import pandas as pd
+import unicodedata
+import re
+import streamlit as st
+import plotly.express as px
 import os
 from pathlib import Path
 
