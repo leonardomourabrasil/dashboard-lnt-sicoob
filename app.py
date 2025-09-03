@@ -9,6 +9,17 @@ from pathlib import Path
 
 st.set_page_config(page_title="LNT 2025 – Sicoob Secovicred", layout="wide")
 
+# CSS para adicionar sombra na logo
+st.markdown("""
+<style>
+    /* Adiciona sombra sutil na logo para melhor visibilidade */
+    .stApp [data-testid="stImage"] > img {
+        filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.3));
+        border-radius: 8px;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # --- Header & Branding ---
 col1, col2 = st.columns([1,6])
 with col1:
