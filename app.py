@@ -9,13 +9,86 @@ from pathlib import Path
 
 st.set_page_config(page_title="LNT 2025 – Sicoob Secovicred", layout="wide")
 
-# CSS para adicionar sombra na logo
+# CSS responsivo para dispositivos móveis
 st.markdown("""
 <style>
     /* Adiciona sombra sutil na logo para melhor visibilidade */
     .stApp [data-testid="stImage"] > img {
         filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.3));
         border-radius: 8px;
+    }
+    
+    /* CSS Responsivo para Mobile */
+    @media (max-width: 768px) {
+        /* Ajusta o header para mobile */
+        .stApp > header {
+            height: auto;
+        }
+        
+        /* Reduz padding lateral em mobile */
+        .main .block-container {
+            padding-left: 1rem;
+            padding-right: 1rem;
+            padding-top: 1rem;
+        }
+        
+        /* Ajusta tamanho da logo em mobile */
+        .stApp [data-testid="stImage"] > img {
+            max-width: 80px;
+            height: auto;
+        }
+        
+        /* Melhora legibilidade dos títulos em mobile */
+        .stApp h1, .stApp h2, .stApp h3 {
+            font-size: 1.2rem !important;
+            line-height: 1.3;
+        }
+        
+        /* Otimiza métricas para mobile */
+        [data-testid="metric-container"] {
+            background-color: #f0f2f6;
+            border: 1px solid #e0e0e0;
+            padding: 0.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Ajusta sidebar para mobile */
+        .css-1d391kg {
+            padding-top: 1rem;
+        }
+        
+        /* Melhora visualização de tabelas em mobile */
+        .stDataFrame {
+            font-size: 0.8rem;
+        }
+        
+        /* Otimiza gráficos para mobile */
+        .js-plotly-plot {
+            width: 100% !important;
+        }
+    }
+    
+    /* CSS para tablets */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .main .block-container {
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
+        
+        .stApp [data-testid="stImage"] > img {
+            max-width: 100px;
+        }
+    }
+    
+    /* Melhora geral da responsividade */
+    .stApp {
+        overflow-x: hidden;
+    }
+    
+    /* Garante que elementos não quebrem o layout */
+    * {
+        box-sizing: border-box;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -125,8 +198,34 @@ if kw:
     mask = fdf[cols_text].fillna('').agg(' '.join, axis=1).apply(norm).str.contains(norm(kw), na=False)
     fdf = fdf[mask]
 
-# --- KPIs ---
-colA, colB, colC, colD = st.columns(4)
+# --- KPIs Responsivos ---
+# Detecta largura da tela usando JavaScript
+st.markdown("""
+<script>
+if (window.innerWidth <= 768) {
+    window.parent.postMessage({type: 'mobile_detected'}, '*');
+}
+</script>
+""", unsafe_allow_html=True)
+
+# Layout responsivo para métricas
+if 'mobile_mode' not in st.session_state:
+    st.session_state.mobile_mode = False
+
+# Botão para alternar modo mobile
+if st.sidebar.button("📱 Alternar Modo Mobile", help="Otimiza layout para dispositivos móveis"):
+    st.session_state.mobile_mode = not st.session_state.mobile_mode
+    st.rerun()
+
+# Layout adaptativo das métricas
+if st.session_state.mobile_mode:
+    # Mobile: 2 colunas por linha
+    colA, colB = st.columns(2)
+    colC, colD = st.columns(2)
+else:
+    # Desktop: 4 colunas
+    colA, colB, colC, colD = st.columns(4)
+
 colA.metric("Respostas", len(fdf))
 if C['prep']:
     prep_counts = fdf[C['prep']].value_counts()
@@ -164,11 +263,20 @@ for k, pat in patterns.items():
 
 topics = pd.DataFrame(rows).sort_values('Quantidade', ascending=False)
 
-# --- Charts ---
+# --- Charts Responsivos ---
+# Configurações responsivas para gráficos
+chart_height = 350 if st.session_state.get('mobile_mode', False) else 500
+font_size = 9 if st.session_state.get('mobile_mode', False) else 12
+
 fig1 = px.bar(topics, x='Quantidade', y='Topico', orientation='h',
               title='Demandas de Treinamento por Tema',
               color='Quantidade', color_continuous_scale=[[0, PRIMARY],[1, ACCENT]])
-fig1.update_layout(coloraxis_showscale=False)
+fig1.update_layout(
+    coloraxis_showscale=False,
+    font=dict(size=font_size),
+    margin=dict(l=20, r=20, t=40, b=20),
+    height=chart_height
+)
 st.plotly_chart(fig1, use_container_width=True)
 
 if C['fmt']:
@@ -176,15 +284,28 @@ if C['fmt']:
     fmt.columns = ['Formato','Quantidade']
     fig2 = px.bar(fmt, x='Formato', y='Quantidade', title='Formato de Treinamento Preferido',
                   color='Quantidade', color_continuous_scale=[[0, ACCENT],[1, PRIMARY]])
-    fig2.update_layout(coloraxis_showscale=False)
+    fig2.update_layout(
+        coloraxis_showscale=False,
+        font=dict(size=font_size),
+        margin=dict(l=20, r=20, t=40, b=20),
+        height=chart_height
+    )
     st.plotly_chart(fig2, use_container_width=True)
 
 if C['period']:
     per = fdf[C['period']].dropna().str.strip().value_counts().reset_index()
     per.columns = ['Periodo','Quantidade']
-    fig3 = px.pie(per, names='Periodo', values='Quantidade', title='Melhor Período para Treinamentos', color_discrete_sequence=[PRIMARY, ACCENT, MUTED])
+    fig3 = px.pie(per, names='Periodo', values='Quantidade', title='Melhor Período para Treinamentos', 
+                  color_discrete_sequence=[PRIMARY, ACCENT, MUTED])
+    fig3.update_layout(
+        font=dict(size=font_size),
+        margin=dict(l=20, r=20, t=40, b=20),
+        height=chart_height
+    )
     st.plotly_chart(fig3, use_container_width=True)
 
-# --- Table of records (optional) ---
+# --- Table of records responsiva ---
 st.markdown("### Registros filtrados")
-st.dataframe(fdf[[c for c in DF.columns if c]], use_container_width=True)
+# Altura da tabela adaptativa
+table_height = 250 if st.session_state.get('mobile_mode', False) else 400
+st.dataframe(fdf[[c for c in DF.columns if c]], use_container_width=True, height=table_height)
