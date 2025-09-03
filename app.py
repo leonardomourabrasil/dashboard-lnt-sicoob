@@ -11,7 +11,7 @@ with col1:
     st.image("sicoob_logo.png", width=120)
 with col2:
     st.markdown("## LNT 2025 – Demandas de Treinamento")
-    st.caption("Dashboard interativa com filtros e visual responsivo – identidade Sicoob Secovicred")
+    st.caption("Dashboard Interativo Sicoob Secovicred")
 
 PRIMARY = "#004F3B"   # verde profundo
 ACCENT  = "#00A38C"   # teal
